@@ -29,3 +29,4 @@ lerna-debug.log*
 
 # tmp
 sqlite.db
+.aider*

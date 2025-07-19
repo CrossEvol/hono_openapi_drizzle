@@ -1,14 +1,17 @@
-import Database from 'better-sqlite3'
+import { createClient } from '@libsql/client' // 导入 createClient
+import 'dotenv/config' // 导入 dotenv/config 以加载环境变量
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
+import { drizzle } from 'drizzle-orm/libsql' // 更改为 libsql 驱动
 import { projects, users } from './schema'
 import { UserWithProjects } from './zod.type'
 
-const sqlite = new Database('./sqlite.db')
-const db = drizzle(sqlite, { logger: true })
+const client = createClient({
+    url: process.env.DB_FILE_NAME!, // 从环境变量中获取数据库 URL
+})
+const db = drizzle(client, { logger: true }) // 使用 libsql 客户端初始化 drizzle
 
 export const getUsersWithProject = async () => {
-    const rows = db
+    const rows = await db
         .select()
         .from(users)
         .leftJoin(projects, eq(users.id, projects.ownerId))
