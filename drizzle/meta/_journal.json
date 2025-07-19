@@ -8,6 +8,13 @@
             "when": 1721835137407,
             "tag": "0000_fancy_tarantula",
             "breakpoints": true
+        },
+        {
+            "idx": 1,
+            "version": "6",
+            "when": 1752929921288,
+            "tag": "0001_burly_moondragon",
+            "breakpoints": true
         }
     ]
 }

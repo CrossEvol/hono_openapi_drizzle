@@ -1,10 +1,14 @@
 import { swaggerUI } from '@hono/swagger-ui'
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { logger } from 'hono/logger'
+import type { AuthType } from './auth'
 import { getUsersWithProject } from './database'
+import auth from './routes/auth'
 import { ProjectSchema, UserSchema } from './zod.type'
 
-const app = new OpenAPIHono()
+const app = new OpenAPIHono<{ Variables: AuthType }>({
+    strict: false,
+})
 app.use(logger())
 
 app.openapi(
@@ -59,6 +63,9 @@ app.openapi(
     },
 )
 
+app.route('/api', auth)
+
+// --- Swagger UI --- a
 app.get(
     '/ui',
     swaggerUI({
@@ -66,6 +73,7 @@ app.get(
     }),
 )
 
+// --- OpenAPI Docs --- a
 app.doc('/doc', {
     info: {
         title: 'An API',
@@ -74,5 +82,4 @@ app.doc('/doc', {
     openapi: '3.1.0',
 })
 
-// Export the Hono app
 export default app

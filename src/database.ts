@@ -8,7 +8,7 @@ import { UserWithProjects } from './zod.type'
 const client = createClient({
     url: process.env.DB_FILE_NAME!, // 从环境变量中获取数据库 URL
 })
-const db = drizzle(client, { logger: true }) // 使用 libsql 客户端初始化 drizzle
+export const db = drizzle(client, { logger: true }) // 使用 libsql 客户端初始化 drizzle
 
 export const getUsersWithProject = async () => {
     const rows = await db
