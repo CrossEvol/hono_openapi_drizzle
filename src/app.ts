@@ -63,7 +63,7 @@ app.openapi(
     },
 )
 
-app.route('/api', auth)
+app.route('/api/auth', auth)
 
 // --- Swagger UI --- a
 app.get(
