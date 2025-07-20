@@ -2,9 +2,9 @@ import { swaggerUI } from '@hono/swagger-ui'
 import { createRoute, OpenAPIHono, z } from '@hono/zod-openapi'
 import { logger } from 'hono/logger'
 import type { AuthType } from './auth'
-import { getUsersWithProject } from './database'
+import { getPostsWithComments } from './database' // 导入新的查询函数
 import auth from './routes/auth'
-import { ProjectSchema, UserSchema } from './zod.type'
+import { PostWithCommentsSchema } from './zod.type' // 导入新的 Zod 类型
 
 const app = new OpenAPIHono<{ Variables: AuthType }>({
     strict: false,
@@ -35,21 +35,18 @@ app.openapi(
     },
 )
 
+// 新增 /posts 路由
 app.openapi(
     createRoute({
         method: 'get',
-        path: '/users',
+        path: '/posts',
         responses: {
             200: {
-                description: 'Create new User with Project',
+                description: 'Retrieve all posts with their comments',
                 content: {
                     'application/json': {
                         schema: z.object({
-                            data: z.array(
-                                UserSchema.extend({
-                                    projects: z.array(ProjectSchema),
-                                }),
-                            ),
+                            data: z.array(PostWithCommentsSchema),
                         }),
                     },
                 },
@@ -57,9 +54,8 @@ app.openapi(
         },
     }),
     async (c) => {
-        const res = await getUsersWithProject()
-
-        return c.json({ data: res })
+        const posts = await getPostsWithComments()
+        return c.json({ data: posts })
     },
 )
 
