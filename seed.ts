@@ -1,60 +1,57 @@
-import { createClient } from '@libsql/client' // 导入 createClient
-import 'dotenv/config' // 导入 dotenv/config 以加载环境变量
-import { count } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/libsql' // 更改为 libsql 驱动
-import { projects, users } from './src/schema'
+import { createClient } from '@libsql/client'
+import 'dotenv/config'
+import { drizzle } from 'drizzle-orm/libsql'
+import { comments, posts } from './src/schema' // 导入 posts 和 comments schema
 
 const client = createClient({
-    url: process.env.DB_FILE_NAME!, // 从环境变量中获取数据库 URL
+    url: process.env.DB_FILE_NAME!,
 })
-const db = drizzle(client, { logger: true }) // 使用 libsql 客户端初始化 drizzle
+const db = drizzle(client, { logger: true })
 
-const initializeUsers = async () => {
-    const usersCount = (await db.select({ count: count() }).from(users))[0]
-        .count
-    if (usersCount === 0) {
-        Array.from({ length: 3 }).forEach((_) => {
-            db.insert(users)
-                .values([
-                    {
-                        fullName: 'User_' + Date.now().toString(),
-                    },
-                ])
-                .run()
-        })
-        return true
-    } else {
-        return false
-    }
+async function seed() {
+    console.log('开始为 posts 和 comments 表添加种子数据...')
+
+    // 清空现有数据（可选，但对于种子脚本通常很有用）
+    await db.delete(comments)
+    await db.delete(posts)
+    console.log('已清空 posts 和 comments 表。')
+
+    // 插入 posts 数据
+    const insertedPosts = await db
+        .insert(posts)
+        .values([
+            {
+                id: 1,
+                title: '我的第一篇文章',
+                content: '这是关于我的第一篇文章的内容。',
+            },
+            {
+                id: 2,
+                title: 'Hono 和 Drizzle ORM',
+                content: '探索 Hono 框架与 Drizzle ORM 的集成。',
+            },
+            {
+                id: 3,
+                title: '数据库迁移指南',
+                content: '一步步教你如何进行数据库迁移。',
+            },
+        ])
+        .returning()
+    console.log('已插入 posts 数据:', insertedPosts.length, '条记录。')
+
+    // 插入 comments 数据，关联到 posts
+    await db.insert(comments).values([
+        { id: 101, text: '很棒的文章！', postId: 1 },
+        { id: 102, text: '期待更多内容。', postId: 1 },
+        { id: 103, text: 'Drizzle ORM 真的很好用。', postId: 2 },
+        { id: 104, text: '感谢分享！', postId: 3 },
+    ])
+    console.log('已插入 comments 数据。')
+
+    console.log('种子脚本执行完毕。')
 }
 
-const initializeProjects = async () => {
-    const usersCount = (await db.select({ count: count() }).from(users))[0]
-        .count
-    const projectsCount = (
-        await db.select({ count: count() }).from(projects)
-    )[0].count
-    if (usersCount !== 0 && projectsCount === 0) {
-        Array.from({ length: 15 }).forEach((_) => {
-            db.insert(projects)
-                .values([
-                    {
-                        name: 'Project_' + Date.now().toString(),
-                        ownerId: Math.ceil(Math.random() * 3),
-                    },
-                ])
-                .run()
-        })
-        return true
-    } else {
-        return false
-    }
-}
-
-const main = async () => {
-    if (await initializeUsers()) {
-        await initializeProjects()
-    }
-}
-
-await main()
+seed().catch((err) => {
+    console.error('种子脚本执行失败:', err)
+    process.exit(1)
+})
